@@ -1,5 +1,4 @@
-const API_URL = 'http://localhost:3000';
-
+const API = window.location.origin;
 const now = new Date();
 now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
 document.getElementById('deadline').value = now.toISOString().slice(0, 16);
@@ -69,7 +68,7 @@ async function loadHistory() {
         const hist = data.history.slice().reverse(); // Show latest completed first
         const container = document.getElementById('historyList');
         container.innerHTML = '';
-        
+
         if (hist.length === 0) {
             container.innerHTML = '<p style="color:#666;">No completed tasks yet.</p>';
             return;
@@ -107,14 +106,14 @@ function renderTasksList(tasks, container, showDelete) {
         container.innerHTML = '<p style="color:#666;">No tasks found.</p>';
         return;
     }
-    
+
     tasks.forEach((task, index) => {
         if (!task) return;
         const div = document.createElement('div');
         div.className = `task-item ${task.priority === 1 ? 'urgent' : ''} ${index === 0 && showDelete ? 'highest-priority' : ''}`;
         div.id = `task-${task.id}`;
         const dateStr = new Date(task.deadline).toLocaleString();
-        
+
         div.innerHTML = `
             <div>
                 <div style="font-weight:bold;">${task.title}</div>
@@ -129,7 +128,7 @@ function renderTasksList(tasks, container, showDelete) {
 function renderTree(nodes) {
     const container = document.getElementById('heapVisualizer');
     container.innerHTML = '';
-    
+
     if (!nodes || nodes.length === 0) {
         container.innerHTML = '<p style="color:#666;">Heap is empty.</p>';
         return;
@@ -146,7 +145,7 @@ function renderTree(nodes) {
     levels.forEach((levelNodes, depth) => {
         const levelDiv = document.createElement('div');
         levelDiv.className = 'tree-level';
-        
+
         levelNodes.forEach(node => {
             const isRoot = node === nodes[0];
             const isUrgent = node.priority === 1;
@@ -156,7 +155,7 @@ function renderTree(nodes) {
             nodeDiv.setAttribute('data-prio', `P:${node.priority}`);
             levelDiv.appendChild(nodeDiv);
         });
-        
+
         container.appendChild(levelDiv);
     });
 }
@@ -174,19 +173,19 @@ document.getElementById('taskForm').addEventListener('submit', async (e) => {
     });
 
     document.getElementById('taskForm').reset();
-    
+
     // Reset deadline
     const newNow = new Date();
     newNow.setMinutes(newNow.getMinutes() - newNow.getTimezoneOffset());
     document.getElementById('deadline').value = newNow.toISOString().slice(0, 16);
-    
+
     refreshAll();
 });
 
 async function deleteTask(id) {
     const el = document.getElementById(`task-${id}`);
     if (el) el.classList.add('removing');
-    
+
     setTimeout(async () => {
         await fetch(`${API_URL}/task/${id}`, { method: 'DELETE' });
         refreshAll();
