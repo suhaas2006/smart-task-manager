@@ -1,0 +1,11 @@
+node_modules/
+# Dependencies are ignored because they can be re-installed using `npm install`.
+
+data.json
+# Ignored to prevent storing local development data or sensitive tasks in the public repository.
+
+.env
+# Ignored because it contains sensitive environment variables and secrets that shouldn't be exposed.
+
+logs/
+# Ignored because these are local server log files that don't need to be tracked.

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Task Manager - Advanced</title>
+    <style>
+        :root {
+            --primary-color: #bb86fc;
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --danger-color: #cf6679;
+            --urgent-color: #ffb74d;
+            --border-color: #333;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .layout { grid-template-columns: 1fr; }
+        }
+
+        .col { display: flex; flex-direction: column; gap: 20px; }
+        
+        .box {
+            background-color: var(--container-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        h2 { margin-top: 0; color: var(--primary-color); font-size: 1.4em; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        h3 { font-size: 1.1em; color: #aaa; margin-bottom: 10px; }
+
+        input {
+            width: calc(100% - 24px);
+            padding: 10px; margin-bottom: 15px;
+            background-color: #2a2a2a; border: 1px solid var(--border-color);
+            color: white; border-radius: 6px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: #121212; border: none; padding: 12px 20px;
+            border-radius: 6px; cursor: pointer; font-weight: bold;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+        button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        
+        .grid-insights {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .insight-card {
+            background: #252525;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .insight-val { font-size: 1.8em; font-weight: bold; color: var(--primary-color); }
+
+        .task-list { display: flex; flex-direction: column; gap: 10px; }
+        .task-item {
+            background: #252525; padding: 15px; border-radius: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+            animation: fadeIn 0.4s ease-out; border-left: 5px solid transparent;
+        }
+        .task-item.urgent { border-left-color: var(--urgent-color); box-shadow: 0 0 10px rgba(255, 183, 77, 0.1); }
+        .task-item.highest-priority { border-left-color: var(--primary-color); }
+        .task-item.removing { animation: fadeOut 0.4s ease-in forwards; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateX(20px); } }
+
+        .btn-delete { background: transparent; color: var(--danger-color); border: 1px solid var(--danger-color); width: auto; }
+        .btn-delete:hover { background: var(--danger-color); color: white; }
+
+        /* Heap Visualizer DOM */
+        .heap-tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: auto;
+            padding: 20px 0;
+            gap: 20px;
+        }
+        
+        .tree-level {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+        
+        .tree-node {
+            background: #2a2a2a;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .tree-node.root {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(187, 134, 252, 0.5);
+        }
+        
+        .tree-node.urgent {
+            border-color: var(--urgent-color);
+        }
+
+        .tree-node::after {
+            content: attr(data-prio);
+            position: absolute;
+            bottom: -20px;
+            font-size: 0.7em;
+            color: #888;
+            white-space: nowrap;
+        }
+        
+        /* Pseudo-lines using CSS (simple approach) */
+        .has-children { position: relative; }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center; color: var(--primary-color); font-weight: 300;">Smart Task Manager</h1>
+    
+    <div class="layout">
+        <div class="col">
+            <div class="box">
+                <h2>Smart Insights</h2>
+                <div class="grid-insights" id="insightsPanel">
+                    <!-- Populated by JS -->
+                </div>
+                <h3>Recommended Tasks</h3>
+                <div id="suggestedTasks" class="task-list"></div>
+            </div>
+
+            <div class="box">
+                <h2>Add Task</h2>
+                <form id="taskForm">
+                    <label>Task Title</label>
+                    <input type="text" id="title" required placeholder="What needs to be done?">
+                    <label>Priority (1 = Highest)</label>
+                    <input type="number" id="priority" required min="1" value="1">
+                    <label>Deadline</label>
+                    <input type="datetime-local" id="deadline" required>
+                    <button type="submit">Add Task to Heap</button>
+                </form>
+            </div>
+            
+            <div class="box">
+                <h2>All Tasks (Heap Order)</h2>
+                <div id="taskList" class="task-list"></div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="box">
+                <h2>Heap Visualizer (Binary Tree)</h2>
+                <p style="font-size:0.85em; color:#888;">Nodes show task IDs. Priorities shown below.</p>
+                <div id="heapVisualizer" class="heap-tree"></div>
+            </div>
+
+            <div class="box">
+                <h2>Task History</h2>
+                <div id="historyList" class="task-list" style="opacity: 0.7;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
