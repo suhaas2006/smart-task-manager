@@ -29,13 +29,40 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`${API}/insights`);
             const data = await res.json();
 
+            // Fetch tasks to manually calculate accurate local overdue count, bypassing backend UTC bugs
+            const tasksRes = await fetch(`${API}/tasks`);
+            const tasksData = await tasksRes.json();
+            
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const date = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const nowStr = `${year}-${month}-${date} ${hours}:${minutes}`;
+
+            let accurateOverdueCount = 0;
+            if (tasksData && tasksData.tasks) {
+                tasksData.tasks.forEach(task => {
+                    let deadlineStr = "";
+                    if (typeof task.deadline === "string") {
+                        deadlineStr = task.deadline.substring(0, 16).replace("T", " ");
+                    } else {
+                        deadlineStr = new Date(task.deadline).toISOString().substring(0, 16).replace("T", " ");
+                    }
+                    if (deadlineStr < nowStr) {
+                        accurateOverdueCount++;
+                    }
+                });
+            }
+
             document.getElementById('insightsPanel').innerHTML = `
                 <div class="insight-card">
                     <div class="insight-val">${data.totalTasks}</div>
                     <div style="font-size:0.8em; color:#888;">Total Tasks</div>
                 </div>
                 <div class="insight-card">
-                    <div class="insight-val" style="color:var(--danger-color);">${data.overdueTasks}</div>
+                    <div class="insight-val" style="color:var(--danger-color);">${accurateOverdueCount}</div>
                     <div style="font-size:0.8em; color:#888;">Overdue</div>
                 </div>
                 <div class="insight-card" style="grid-column: span 2;">
@@ -122,10 +149,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const date = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const nowStr = `${year}-${month}-${date} ${hours}:${minutes}`;
 
         tasks.forEach((task, index) => {
-            const taskDeadline = new Date(task.deadline);
-            const isOverdue = taskDeadline < now;
+            let deadlineStr = "Invalid Date";
+            if (task.deadline) {
+                if (typeof task.deadline === "string") {
+                    deadlineStr = task.deadline.substring(0, 16).replace("T", " ");
+                } else {
+                    deadlineStr = new Date(task.deadline).toISOString().substring(0, 16).replace("T", " ");
+                }
+            }
+
+            const isOverdue = deadlineStr < nowStr;
 
             let classes = ['task-item'];
             if (isOverdue) {
@@ -141,17 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const div = document.createElement('div');
             div.className = classes.join(' ');
             div.id = `task-${task.id}`;
-
-            let deadlineStr = "Invalid Date";
-            if (task.deadline) {
-                if (typeof task.deadline === "string") {
-                    // Extract exact YYYY-MM-DDTHH:MM regardless of trailing 'Z'
-                    deadlineStr = task.deadline.substring(0, 16).replace("T", " ");
-                } else {
-                    // If Date or number, use UTC ISO string to prevent local timezone shifting
-                    deadlineStr = new Date(task.deadline).toISOString().substring(0, 16).replace("T", " ");
-                }
-            }
 
             div.innerHTML = `
                 <div>
