@@ -114,16 +114,32 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const now = new Date();
+
         tasks.forEach((task, index) => {
+            const taskDeadline = new Date(task.deadline);
+            const isOverdue = taskDeadline < now;
+            
+            let classes = ['task-item'];
+            if (isOverdue) {
+                classes.push('overdue');
+            } else if (task.priority === 1) {
+                classes.push('urgent');
+            }
+            
+            if (index === 0 && showDelete) {
+                classes.push('highest-priority');
+            }
+
             const div = document.createElement('div');
-            div.className = `task-item ${task.priority === 1 ? 'urgent' : ''} ${index === 0 && showDelete ? 'highest-priority' : ''}`;
+            div.className = classes.join(' ');
             div.id = `task-${task.id}`;
 
             div.innerHTML = `
                 <div>
-                    <div style="font-weight:bold;">${task.title}</div>
+                    <div style="font-weight:bold;">${task.title} ${isOverdue ? '<span class="overdue-label">[OVERDUE]</span>' : ''}</div>
                     <div style="font-size:0.8em; color:#888;">
-                        Priority: ${task.priority} | Due: ${new Date(task.deadline).toLocaleString()}
+                        Priority: ${task.priority} | Due: ${taskDeadline.toLocaleString()}
                     </div>
                 </div>
                 ${showDelete ? `<button class="btn-delete" onclick="deleteTask(${task.id})">Complete</button>` : ''}
@@ -171,8 +187,22 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         const title = document.getElementById('title').value;
-        const priority = Number(document.getElementById('priority').value);
         const deadline = document.getElementById('deadline').value;
+
+        // Auto Priority Assignment based on deadline
+        let priority = 3;
+        const deadlineDate = new Date(deadline);
+        const now = new Date();
+        const diffMs = deadlineDate - now;
+        const diffHours = diffMs / (1000 * 60 * 60);
+
+        if (diffHours <= 6) {
+            priority = 1;
+        } else if (diffHours <= 24) {
+            priority = 2;
+        } else {
+            priority = 3;
+        }
 
         try {
             await fetch(`${API}/add-task`, {
@@ -182,6 +212,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             e.target.reset();
+            
+            // Set default deadline again after reset
+            const currentNow = new Date();
+            currentNow.setMinutes(currentNow.getMinutes() - currentNow.getTimezoneOffset());
+            document.getElementById('deadline').value = currentNow.toISOString().slice(0, 16);
 
             refreshAll();
 

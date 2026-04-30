@@ -87,6 +87,10 @@
         .task-item.highest-priority { border-left-color: var(--primary-color); }
         .task-item.removing { animation: fadeOut 0.4s ease-in forwards; }
         
+        .task-item.overdue { border-left-color: var(--danger-color); background-color: rgba(207, 102, 121, 0.1); }
+        .overdue-label { color: var(--danger-color); font-weight: bold; font-size: 0.8em; margin-left: 10px; }
+        
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeOut { to { opacity: 0; transform: translateX(20px); } }
 
@@ -165,8 +169,8 @@
                 <form id="taskForm">
                     <label>Task Title</label>
                     <input type="text" id="title" required placeholder="What needs to be done?">
-                    <label>Priority (1 = Highest)</label>
-                    <input type="number" id="priority" required min="1" value="1">
+                    <label>Priority (Auto-assigned)</label>
+                    <input type="text" id="priority" disabled placeholder="Auto-calculated" title="Priority is automatically assigned based on deadline">
                     <label>Deadline</label>
                     <input type="datetime-local" id="deadline" required>
                     <button type="submit">Add Task to Heap</button>
