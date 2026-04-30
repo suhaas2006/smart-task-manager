@@ -142,9 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
             div.className = classes.join(' ');
             div.id = `task-${task.id}`;
 
-            const deadlineStr = typeof task.deadline === "string" 
-                ? task.deadline.replace("T", " ") 
-                : new Date(task.deadline).toLocaleString();
+            let deadlineStr = "Invalid Date";
+            if (task.deadline) {
+                if (typeof task.deadline === "string") {
+                    // Extract exact YYYY-MM-DDTHH:MM regardless of trailing 'Z'
+                    deadlineStr = task.deadline.substring(0, 16).replace("T", " ");
+                } else {
+                    // If Date or number, use UTC ISO string to prevent local timezone shifting
+                    deadlineStr = new Date(task.deadline).toISOString().substring(0, 16).replace("T", " ");
+                }
+            }
 
             div.innerHTML = `
                 <div>
