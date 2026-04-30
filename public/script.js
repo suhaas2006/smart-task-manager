@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div>
                     <div style="font-weight:bold;">${task.title} ${isOverdue ? '<span class="overdue-label">[OVERDUE]</span>' : ''}</div>
                     <div style="font-size:0.8em; color:#888;">
-                        Priority: ${task.priority} | Due: ${taskDeadline.toLocaleString()}
+                        Priority: ${task.priority} | Due: ${task.deadline.replace('T', ' ')}
                     </div>
                 </div>
                 ${showDelete ? `<button class="btn-delete" onclick="deleteTask(${task.id})">Complete</button>` : ''}
@@ -237,4 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     refreshAll();
+    
+    // Auto-refresh every 60 seconds
+    setInterval(refreshAll, 60000);
 });
