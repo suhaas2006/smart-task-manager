@@ -142,11 +142,15 @@ document.addEventListener('DOMContentLoaded', () => {
             div.className = classes.join(' ');
             div.id = `task-${task.id}`;
 
+            const deadlineStr = typeof task.deadline === "string" 
+                ? task.deadline.replace("T", " ") 
+                : new Date(task.deadline).toLocaleString();
+
             div.innerHTML = `
                 <div>
                     <div style="font-weight:bold;">${task.title} ${isOverdue ? '<span class="overdue-label">[OVERDUE]</span>' : ''}</div>
                     <div style="font-size:0.8em; color:#888;">
-                        Priority: ${task.priority} | Due: ${new Date(task.deadline).toLocaleString()}
+                        Priority: ${task.priority} | Due: ${deadlineStr}
                     </div>
                 </div>
                 ${showDelete ? `<button class="btn-delete" onclick="deleteTask(${task.id})">Complete</button>` : ''}
