@@ -122,15 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const date = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const nowStr = `${year}-${month}-${date}T${hours}:${minutes}`;
 
         tasks.forEach((task, index) => {
-            const isOverdue = task.deadline < nowStr;
+            const taskDeadline = new Date(task.deadline);
+            const isOverdue = taskDeadline < now;
 
             let classes = ['task-item'];
             if (isOverdue) {
@@ -151,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div>
                     <div style="font-weight:bold;">${task.title} ${isOverdue ? '<span class="overdue-label">[OVERDUE]</span>' : ''}</div>
                     <div style="font-size:0.8em; color:#888;">
-                        Priority: ${task.priority} | Due: ${task.deadline.replace('T', ' ')}
+                        Priority: ${task.priority} | Due: ${new Date(task.deadline).toLocaleString()}
                     </div>
                 </div>
                 ${showDelete ? `<button class="btn-delete" onclick="deleteTask(${task.id})">Complete</button>` : ''}
