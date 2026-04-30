@@ -2,7 +2,7 @@ const API = window.location.origin;
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Set default deadline
+    // Set default deadline safely in Local Time
     function setDefaultDeadline() {
         const now = new Date();
         const year = now.getFullYear();
@@ -122,10 +122,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const date = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const nowStr = `${year}-${month}-${date}T${hours}:${minutes}`;
 
         tasks.forEach((task, index) => {
-            const taskDeadline = new Date(task.deadline);
-            const isOverdue = taskDeadline < now;
+            const isOverdue = task.deadline < nowStr;
 
             let classes = ['task-item'];
             if (isOverdue) {
@@ -217,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             e.target.reset();
-            
+
             setDefaultDeadline();
 
             refreshAll();
@@ -237,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     refreshAll();
-    
+
     // Auto-refresh every 60 seconds
     setInterval(refreshAll, 60000);
 });
